@@ -58,22 +58,25 @@ final class StandardEngineValve extends ValveBase {
     public final void invoke(Request request, Response response)
             throws IOException, ServletException {
 
-        // Select the Host to be used for this Request
+        // 选择被request使用的主机。
         Host host = request.getHost();
         if (host == null) {
-            // HTTP 0.9 or HTTP 1.0 request without a host when no default host
-            // is defined.
+            // 如果Host是空，就报404错误。
+            // 当没有定义默认主机时，HTTP 0.9或HTTP 1.0请求没有主机。
             // Don't overwrite an existing error
             if (!response.isError()) {
                 response.sendError(404);
             }
             return;
         }
+        // 如果Request支持异步处理。
         if (request.isAsyncSupported()) {
+            // 给request设置异步处理。
             request.setAsyncSupported(host.getPipeline().isAsyncSupported());
         }
 
         // Ask this Host to process this request
+        // 调用Host处理的责任链模式的头
         host.getPipeline().getFirst().invoke(request, response);
     }
 }

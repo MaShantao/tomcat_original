@@ -299,18 +299,19 @@ public class CoyoteAdapter implements Adapter {
     @Override
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res)
             throws Exception {
-
+        // 将coyote.Request和coyote.Rsponse转换成
+        // HttpServletRequest和HttpServletRsponse
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
 
         if (request == null) {
-            // Create objects
+            // 通过connector创建Request和Response。
             request = connector.createRequest();
             request.setCoyoteRequest(req);
             response = connector.createResponse();
             response.setCoyoteResponse(res);
 
-            // Link objects
+            // 将request和response进行链接
             request.setResponse(response);
             response.setRequest(request);
 
@@ -318,7 +319,7 @@ public class CoyoteAdapter implements Adapter {
             req.setNote(ADAPTER_NOTES, request);
             res.setNote(ADAPTER_NOTES, response);
 
-            // Set query string encoding
+            // 设置查询字符串的编码，也就是URL的编码。
             req.getParameters().setQueryStringCharset(connector.getURICharset());
         }
 
@@ -332,14 +333,14 @@ public class CoyoteAdapter implements Adapter {
         req.getRequestProcessor().setWorkerThreadName(THREAD_NAME.get());
 
         try {
-            // Parse and set Catalina and configuration specific
-            // request parameters
+            // 解析和设置Catalina并且配置指定的请求参数。
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
-                //check valves if we support async
+                // 检查责任链模式是否支持异步
                 request.setAsyncSupported(
                         connector.getService().getContainer().getPipeline().isAsyncSupported());
-                // Calling the container
+                // 调用Engine的责任链模式的头。
+                // getFirst
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
@@ -370,7 +371,9 @@ public class CoyoteAdapter implements Adapter {
                     request.getAsyncContextInternal().setErrorState(throwable, true);
                 }
             } else {
+                // 请求完成了。
                 request.finishRequest();
+                // 响应也完成了。
                 response.finishResponse();
             }
 
@@ -688,6 +691,7 @@ public class CoyoteAdapter implements Adapter {
 
         while (mapRequired) {
             // This will map the the latest version by default
+            // 建立映射
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
 

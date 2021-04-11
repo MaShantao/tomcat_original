@@ -105,10 +105,11 @@ final class StandardHostValve extends ValveBase {
     @Override
     public final void invoke(Request request, Response response)
             throws IOException, ServletException {
-
-        // Select the Context to be used for this Request
+        // 找到Request里面用到的Context
+        // request已经把请求给解析好了
         Context context = request.getContext();
         if (context == null) {
+            // 如果请求的Context不存在，就报404错误。
             // Don't overwrite an existing error
             if (!response.isError()) {
                 response.sendError(404);

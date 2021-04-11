@@ -443,6 +443,7 @@ public class Response implements HttpServletResponse {
      */
     public void finishResponse() throws IOException {
         // Writing leftover bytes
+        // 关于输出字符流。
         outputBuffer.close();
     }
 

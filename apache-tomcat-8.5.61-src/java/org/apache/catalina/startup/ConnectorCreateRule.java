@@ -61,6 +61,7 @@ public class ConnectorCreateRule extends Rule {
         if (attributes.getValue("executor") != null) {
             ex = svc.getExecutor(attributes.getValue("executor"));
         }
+        // 创建Connector对象
         Connector con = new Connector(attributes.getValue("protocol"));
         if (ex != null) {
             setExecutor(con, ex);

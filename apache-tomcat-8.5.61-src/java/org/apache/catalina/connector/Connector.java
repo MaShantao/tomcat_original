@@ -82,6 +82,7 @@ public class Connector extends LifecycleMBeanBase {
         // 初始化了 ProtocolHandler
         ProtocolHandler p = null;
         try {
+            //"org.apache.coyote.http11.Http11NioProtocol";
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {
@@ -1092,6 +1093,7 @@ public class Connector extends LifecycleMBeanBase {
         setState(LifecycleState.STARTING);
 
         try {
+            // 启动了默认的protocolhandler
             protocolHandler.start();
         } catch (Exception e) {
             throw new LifecycleException(

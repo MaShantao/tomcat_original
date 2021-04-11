@@ -1196,12 +1196,16 @@ public abstract class AbstractEndpoint<S> {
             if (socketWrapper == null) {
                 return false;
             }
+            // 得到socket的处理器
+            // Connector在构造函数里面已经指定了协议：org.apache.coyote.http11.Http11NioProtocol。
             SocketProcessorBase<S> sc = processorCache.pop();
             if (sc == null) {
+            // 如果没有，就创建一个Socket的处理器。
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
             }
+            //socket的处理交给了线程池去处理。
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
                 executor.execute(sc);

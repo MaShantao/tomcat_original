@@ -383,7 +383,10 @@ public abstract class LifecycleBase implements Lifecycle {
     }
 
     /**
-     * SetState背后会构造
+     * SetState背后会构造fireLifecycleEvent，并进行处理。
+     * 相当于做了fireLifecycleEvent(lifecycleEvent, data);
+     * 但是回对lifecycleEvent做一些校验工作。
+     * 不晓得为啥fireLifecycleEvent不做校验工作，反而setState会做校验！！
      * @param state
      * @param data
      * @param check

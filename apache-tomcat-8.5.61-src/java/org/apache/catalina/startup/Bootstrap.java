@@ -134,6 +134,8 @@ public final class Bootstrap {
     // Catalina实例对象的引用。
     private Object catalinaDaemon = null;
 
+
+    // Tomcat的三个类加载器
     ClassLoader commonLoader = null;
     ClassLoader catalinaLoader = null;
     ClassLoader sharedLoader = null;
@@ -141,12 +143,15 @@ public final class Bootstrap {
     // 初始化类加载器，tomcat自定义的类加载器
     private void initClassLoaders() {
         try {
+            // 1、创建CommonClassLoader；负责加载Web应用和服务器都可见的类
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader = this.getClass().getClassLoader();
             }
+            // 2、创建CatalinaClassLoader；负责加载只有Tomcat应用服务器内部可见的类
             catalinaLoader = createClassLoader("server", commonLoader);
+            // 3、创建SharedClassLoader；负责加载Web应用共享的类
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
             handleThrowable(t);
@@ -158,17 +163,19 @@ public final class Bootstrap {
 
     private ClassLoader createClassLoader(String name, ClassLoader parent)
             throws Exception {
-
+        // 从CatalinaProperties里面加载  属性name + ".loader"
+        // Value： "${catalina.base}/lib" 用的是相对路径
         String value = CatalinaProperties.getProperty(name + ".loader");
+        // 找不到该属性，就返回parent
         if ((value == null) || (value.equals("")))
             return parent;
-
+        //将相对路径转成绝对路径
         value = replace(value);
 
         List<Repository> repositories = new ArrayList<>();
-
+        // 将一个字符串形式的PATH路径分割成仓库数组
         String[] repositoryPaths = getPaths(value);
-
+        // 遍历数组，封装Repository集合
         for (String repository : repositoryPaths) {
             // Check for a JAR URL repository
             try {
@@ -191,7 +198,7 @@ public final class Bootstrap {
                 repositories.add(new Repository(repository, RepositoryType.DIR));
             }
         }
-
+        // 根据加载目录的集合 和 父加载器，创建类加载器对象。
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 

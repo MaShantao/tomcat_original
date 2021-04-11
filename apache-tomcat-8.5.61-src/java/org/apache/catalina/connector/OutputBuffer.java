@@ -251,7 +251,7 @@ public class OutputBuffer extends Writer {
         // If there are chars, flush all of them to the byte buffer now as bytes are used to
         // calculate the content-length (if everything fits into the byte buffer, of course).
         if (cb.remaining() > 0) {
-            flushCharBuffer();
+            flushCharBuffer(); // 刷出数据到ByteChunk，并进行字符转换。
         }
 
         if ((!coyoteResponse.isCommitted()) && (coyoteResponse.getContentLengthLong() == -1)
@@ -265,7 +265,7 @@ public class OutputBuffer extends Writer {
                 coyoteResponse.setContentLength(bb.remaining());
             }
         }
-
+        // 由bytechunk数据对象刷出到outputbuffer
         if (coyoteResponse.getStatus() == HttpServletResponse.SC_SWITCHING_PROTOCOLS) {
             doFlush(true);
         } else {
@@ -276,6 +276,8 @@ public class OutputBuffer extends Writer {
         // The request should have been completely read by the time the response
         // is closed. Further reads of the input a) are pointless and b) really
         // confuse AJP (bug 50189) so close the input buffer to prevent them.
+        // 请求应该在response之前关闭被完全读取了，所以进一步的读取a的输入是没有意义的。
+        // 为了混淆AJP的bug，就关闭了input buffer来阻止他们。
         Request req = (Request) coyoteResponse.getRequest().getNote(CoyoteAdapter.ADAPTER_NOTES);
         req.inputBuffer.close();
 
@@ -301,7 +303,6 @@ public class OutputBuffer extends Writer {
      * @throws IOException An underlying IOException occurred
      */
     protected void doFlush(boolean realFlush) throws IOException {
-
         if (suspended) {
             return;
         }

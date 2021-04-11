@@ -548,7 +548,9 @@ public class Catalina {
         initNaming();
 
         // 创建和启动 Digester（基于SAX的XML解析器）
-        // 这里面会执行一系列的操作，包括设置容器的监听规则
+        // 这里面会执行一系列的操作，其实很复杂
+        // 包括创建容器、设置容器的监听事件映射规则等
+        // 也就是Server、Service、Connector、Engine、Host、Context的初始化。
         Digester digester = createStartDigester();
 
         InputSource inputSource = null;
@@ -640,7 +642,6 @@ public class Catalina {
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         // 设置Catalina的Base路径
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
-
         // Stream redirection
         initStreams();
 
@@ -774,7 +775,6 @@ public class Catalina {
         } catch (LifecycleException e) {
             log.error("Catalina.stop", e);
         }
-
     }
 
 

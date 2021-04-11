@@ -91,25 +91,26 @@ final class StandardWrapperValve
     @Override
     public final void invoke(Request request, Response response)
             throws IOException, ServletException {
-
-        // Initialize local variables we may need
+        // 初始化我们需要的本地变量
         boolean unavailable = false;
         Throwable throwable = null;
         // This should be a Request attribute...
         long t1 = System.currentTimeMillis();
+        // 原子类AtomicInteger，CAS操作，表示请求的数量。
         requestCount.incrementAndGet();
         StandardWrapper wrapper = (StandardWrapper) getContainer();
         Servlet servlet = null;
         Context context = (Context) wrapper.getParent();
 
-        // Check for the application being marked unavailable
+        // 检查当前的Context应用是否已经被标注为不可以使用
         if (!context.getState().isAvailable()) {
+            // 如果当前应用不可以使用的话，就报503错误。
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     sm.getString("standardContext.isUnavailable"));
             unavailable = true;
         }
 
-        // Check for the servlet being marked unavailable
+        // 检查Servelt是否被标记为不可使用
         if (!unavailable && wrapper.isUnavailable()) {
             container.getLogger().info(sm.getString("standardWrapper.isUnavailable",
                     wrapper.getName()));
@@ -126,10 +127,10 @@ final class StandardWrapperValve
             }
             unavailable = true;
         }
-
-        // Allocate a servlet instance to process this request
+        // Servelt是第一次调用的时候初始化
         try {
             if (!unavailable) {
+                // 如果此时Servelt还没有被初始化，就分配一个Servelt实例来处理request请求。
                 servlet = wrapper.allocate();
             }
         } catch (UnavailableException e) {
@@ -167,7 +168,8 @@ final class StandardWrapperValve
         request.setAttribute(Globals.DISPATCHER_TYPE_ATTR, dispatcherType);
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
-        // Create the filter chain for this request
+
+        // 给该request创建Filter过滤链。
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 
@@ -182,6 +184,7 @@ final class StandardWrapperValve
                         if (request.isAsyncDispatching()) {
                             request.getAsyncContextInternal().doInternalDispatch();
                         } else {
+                            // 调用过滤链
                             filterChain.doFilter(request.getRequest(),
                                     response.getResponse());
                         }
@@ -253,12 +256,12 @@ final class StandardWrapperValve
             throwable = e;
             exception(request, response, e);
         } finally {
-            // Release the filter chain (if any) for this request
+            // 如果该request的过滤链不为空，则将过滤链进行释放
             if (filterChain != null) {
-                filterChain.release();
+                filterChain.release(); // 释放资源。
             }
 
-            // Deallocate the allocated servlet instance
+            // 取消分配的Servelt实例。即将Servelt放入Stack<Servlet>中。相当于放入Servelt池子。
             try {
                 if (servlet != null) {
                     wrapper.deallocate(servlet);

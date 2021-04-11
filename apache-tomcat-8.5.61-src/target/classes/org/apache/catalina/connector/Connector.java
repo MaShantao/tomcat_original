@@ -79,15 +79,17 @@ public class Connector extends LifecycleMBeanBase {
 
     public Connector(String protocol) {
         setProtocol(protocol);
-        // Instantiate protocol handler
+        // 初始化了 ProtocolHandler
         ProtocolHandler p = null;
         try {
+            //"org.apache.coyote.http11.Http11NioProtocol";
             Class<?> clazz = Class.forName(protocolHandlerClassName);
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {
             log.error(sm.getString(
                     "coyoteConnector.protocolHandlerInstantiationFailed"), e);
         } finally {
+            // 设置默认的protocolHandler为Http11NioProtocol
             this.protocolHandler = p;
         }
 
@@ -241,10 +243,7 @@ public class Connector extends LifecycleMBeanBase {
     protected boolean useIPVHosts = false;
 
 
-    /**
-     * Coyote Protocol handler class name.
-     * Defaults to the Coyote HTTP/1.1 protocolHandler.
-     */
+    // 默认的HTTP1.1的protocolHandler
     protected String protocolHandlerClassName =
             "org.apache.coyote.http11.Http11NioProtocol";
 
@@ -1094,6 +1093,7 @@ public class Connector extends LifecycleMBeanBase {
         setState(LifecycleState.STARTING);
 
         try {
+            // 启动了默认的protocolhandler
             protocolHandler.start();
         } catch (Exception e) {
             throw new LifecycleException(
