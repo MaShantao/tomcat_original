@@ -61,7 +61,6 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
      */
     private static final AtomicInteger nameCounter = new AtomicInteger(0);
 
-
     /**
      * Unique ID for this connector. Only used if the connector is configured
      * to use a random port as the port will change if stop(), start() is
@@ -772,10 +771,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
     protected static class ConnectionHandler<S> implements AbstractEndpoint.Handler<S> {
 
-        private final AbstractProtocol<S> proto;
+        private final AbstractProtocol<S> proto; // 记录当前的Protocol对象
         private final RequestGroupInfo global = new RequestGroupInfo();
         private final AtomicLong registerCount = new AtomicLong(0);
+        // 终于找到了这个集合，给Socket和处理器建立连接
+        // 对每个有效链接都会缓存进这里，用于连接选择一个合适的Processor实现以进行请求处理。
         private final Map<S, Processor> connections = new ConcurrentHashMap<>();
+        // 可循环的处理器栈
         private final RecycledProcessors recycledProcessors = new RecycledProcessors(this);
 
         public ConnectionHandler(AbstractProtocol<S> proto) {
@@ -808,12 +810,12 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         wrapper.getSocket(), status));
             }
             if (wrapper == null) {
-                // Nothing to do. Socket has been closed.
+                // wrapper == null 表示Socket已经被关闭了，所以不需要做任何操作。
                 return SocketState.CLOSED;
             }
-
+            // 得到wrapper内的Socket对象
             S socket = wrapper.getSocket();
-
+            // 从Map缓冲区中得到socket对应的处理器。
             Processor processor = connections.get(socket);
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
@@ -824,6 +826,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             // dispatched. Because of delays in the dispatch process, the
             // timeout may no longer be required. Check here and avoid
             // unnecessary processing.
+
+            // 超时是在专用线程上计算的，然后被调度。
+            // 因为调度过程中的延迟，可能不再需要超时。检查这里，避免不必要的处理。
             if (SocketEvent.TIMEOUT == status &&
                     (processor == null ||
                             !processor.isAsync() && !processor.isUpgrade() ||
@@ -831,26 +836,33 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // This is effectively a NO-OP
                 return SocketState.OPEN;
             }
-
+            // 如果Map缓存存在该socket相关的处理器
             if (processor != null) {
                 // Make sure an async timeout doesn't fire
+                // 确保没有触发异步超时
                 getProtocol().removeWaitingProcessor(processor);
             } else if (status == SocketEvent.DISCONNECT || status == SocketEvent.ERROR) {
                 // Nothing to do. Endpoint requested a close and there is no
                 // longer a processor associated with this socket.
+                // SocketEvent事件是关闭，或者SocketEvent时间出错，此时不需要做任何操作。
+                // Endpoint需要一个CLOSED的信号，并且这里不再有与这个socket有关联了
                 return SocketState.CLOSED;
             }
 
             ContainerThreadMarker.set();
 
             try {
+                // Map缓存不存在该socket相关的处理器
                 if (processor == null) {
                     String negotiatedProtocol = wrapper.getNegotiatedProtocol();
                     // OpenSSL typically returns null whereas JSSE typically
                     // returns "" when no protocol is negotiated
+                    // OpenSSL通常返回null，而JSSE通常在没有协议协商时返回""
                     if (negotiatedProtocol != null && negotiatedProtocol.length() > 0) {
+                        // 获取协商协议
                         UpgradeProtocol upgradeProtocol = getProtocol().getNegotiatedProtocol(negotiatedProtocol);
                         if (upgradeProtocol != null) {
+                            // 升级协议为空
                             processor = upgradeProtocol.getProcessor(wrapper, getProtocol().getAdapter());
                             if (getLog().isDebugEnabled()) {
                                 getLog().debug(sm.getString("abstractConnectionHandler.processorCreate", processor));
@@ -882,34 +894,40 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         }
                     }
                 }
+                // 经过上面的操作，processor还是null的话。
                 if (processor == null) {
+                    // 从recycledProcessors可循环processors中获取processor
                     processor = recycledProcessors.pop();
                     if (getLog().isDebugEnabled()) {
                         getLog().debug(sm.getString("abstractConnectionHandler.processorPop", processor));
                     }
                 }
                 if (processor == null) {
+                    // 创建处理器
                     processor = getProtocol().createProcessor();
                     register(processor);
                     if (getLog().isDebugEnabled()) {
                         getLog().debug(sm.getString("abstractConnectionHandler.processorCreate", processor));
                     }
                 }
-
                 processor.setSslSupport(
                         wrapper.getSslSupport(getProtocol().getClientCertProvider()));
 
-                // Associate the processor with the connection
+                // 将socket和processor建立关联。
                 connections.put(socket, processor);
 
                 SocketState state = SocketState.CLOSED;
                 do {
+                    // 调用processor的process方法。
                     state = processor.process(wrapper, status);
 
+                    // processor的process方法返回升级状态
                     if (state == SocketState.UPGRADING) {
                         // Get the HTTP upgrade handler
+                        // 得到HTTP的升级句柄
                         UpgradeToken upgradeToken = processor.getUpgradeToken();
                         // Retrieve leftover input
+                        // 检索剩余输入
                         ByteBuffer leftOverInput = processor.getLeftoverInput();
                         if (upgradeToken == null) {
                             // Assume direct HTTP/2 connection

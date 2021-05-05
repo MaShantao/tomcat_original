@@ -49,12 +49,13 @@ public abstract class AbstractProcessorLight implements Processor {
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("Processing dispatch type: [" + nextDispatch + "]");
                 }
+                // 模板方法
                 state = dispatch(nextDispatch.getSocketStatus());
                 if (!dispatches.hasNext()) {
                     state = checkForPipelinedData(state, socketWrapper);
                 }
             } else if (status == SocketEvent.DISCONNECT) {
-                // Do nothing here, just wait for it to get recycled
+                // 如果是DISCONNECT事件，就不做任何操作，仅仅等待它被回收利用
             } else if (isAsync() || isUpgrade() || state == SocketState.ASYNC_END) {
                 state = dispatch(status);
                 state = checkForPipelinedData(state, socketWrapper);
@@ -62,6 +63,7 @@ public abstract class AbstractProcessorLight implements Processor {
                 // Extra write event likely after async, ignore
                 state = SocketState.LONG;
             } else if (status == SocketEvent.OPEN_READ) {
+                // 模板方法，如果是读取数据的事件，就执行service模板方法。
                 state = service(socketWrapper);
             } else if (status == SocketEvent.CONNECT_FAIL) {
                 logAccess(socketWrapper);

@@ -91,7 +91,6 @@ final class StandardWrapperValve
     @Override
     public final void invoke(Request request, Response response)
             throws IOException, ServletException {
-
         // 初始化我们需要的本地变量
         boolean unavailable = false;
         Throwable throwable = null;
@@ -170,7 +169,7 @@ final class StandardWrapperValve
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
 
-        // 给该request创建过滤链。
+        // 给该request创建Filter过滤链。
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 

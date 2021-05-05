@@ -430,6 +430,7 @@ public abstract class AbstractEndpoint<S> {
     /**
      * Acceptor thread count.
      */
+    // 监听客户端请求的线程数量
     protected int acceptorThreadCount = 1;
 
     public void setAcceptorThreadCount(int acceptorThreadCount) {

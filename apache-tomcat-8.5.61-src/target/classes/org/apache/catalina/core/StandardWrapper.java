@@ -753,8 +753,10 @@ public class StandardWrapper extends ContainerBase
         boolean newInstance = false;
 
         // If not SingleThreadedModel, return the same instance every time
+        // 如果不是单线程模式，每次就返回同样的实例对象
         if (!singleThreadModel) {
-            // Load and initialize our instance if necessary
+            // 加载还有初始化我们的实例
+            // 这里是double check，双重检查
             if (instance == null || !instanceInitialized) {
                 synchronized (this) {
                     if (instance == null) {
@@ -850,6 +852,7 @@ public class StandardWrapper extends ContainerBase
     public void deallocate(Servlet servlet) throws ServletException {
 
         // If not SingleThreadModel, no action is required
+        // 如果不是单线程模式，也就是多线程模式，此时不需要进行任何操作
         if (!singleThreadModel) {
             countAllocated.decrementAndGet();
             return;
