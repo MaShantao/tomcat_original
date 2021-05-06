@@ -3,9 +3,6 @@
     <CLASSES>
       <root url="jar://E:/repository/junit/junit/4.12/junit-4.12.jar!/" />
     </CLASSES>
-    <JAVADOC>
-      <root url="jar://E:/repository/junit/junit/4.12/junit-4.12-javadoc.jar!/" />
-    </JAVADOC>
     <SOURCES>
       <root url="jar://E:/repository/junit/junit/4.12/junit-4.12-sources.jar!/" />
     </SOURCES>

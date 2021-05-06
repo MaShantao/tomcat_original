@@ -3,9 +3,6 @@
     <CLASSES>
       <root url="jar://E:/repository/wsdl4j/wsdl4j/1.6.2/wsdl4j-1.6.2.jar!/" />
     </CLASSES>
-    <JAVADOC>
-      <root url="jar://E:/repository/wsdl4j/wsdl4j/1.6.2/wsdl4j-1.6.2-javadoc.jar!/" />
-    </JAVADOC>
     <SOURCES>
       <root url="jar://E:/repository/wsdl4j/wsdl4j/1.6.2/wsdl4j-1.6.2-sources.jar!/" />
     </SOURCES>

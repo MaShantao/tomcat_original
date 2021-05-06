@@ -169,7 +169,7 @@ final class StandardWrapperValve
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
 
-        // 给该request创建Filter过滤链。
+        // 给该request创建Filter过滤链。Filter过滤链执行完之后，会执行Servelt
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 
